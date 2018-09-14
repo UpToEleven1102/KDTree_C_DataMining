@@ -8,8 +8,6 @@ struct dataPoint {
 };
 
 //Utility thingies
-
-
 struct dataPoint emptyDataPoint(int dim) {
     struct dataPoint out;
     out.data = (double*)malloc(dim * sizeof(double));
@@ -27,14 +25,17 @@ struct dataPoint getElement(int dim, int index, double *data) {
     return out;
 }
 
-void printData(int dim, int i0, int in, double *data) {
-    struct dataPoint ele;
-    for(int i = i0; i< in; i++) {
-        ele = getElement(dim, i, data);
-        printf("%d --- \n", i);
-        for(int j = 0; j < dim; j++) {
-            printf("%f", ele.data[j]);
-        }
+void printArray(int dim, int ndata, double *data) {
+    for (int i = 0; i < dim * ndata; i++) {
+        printf("%f \n", data[i]);
+    }
+}
+
+void printData(int dim, int ndata, double *data) {
+    for(int i = 0; i< ndata; i++) {
+        struct dataPoint e = getElement(dim, i, data);
+        printf("%d-----\n", i);
+        printArray(dim, 1, e.data);
     }
 }
 
@@ -43,21 +44,30 @@ void printResult(DIM, N_DATA, data,  KK, cluster_start, cluster_size, cluster_as
 }
 
 //KDTree thingies
-int calculateClusterCentroids(int dim, double *data, int cluster_start, int cluster_size, int *cluster_centroid, int *cluster_bdry) {
+int calculateClusterCentroids(int dim, double *data, int cluster_start, int cluster_size, double *cluster_centroid, double *cluster_bdry) {
 //invariant: mean x = 1/n sum(x1+x2+...)
     for(int i = 0; i< cluster_size; i++) {
         int index = cluster_start/dim + i;
         struct dataPoint e = getElement(dim, index, data);
-        printf("--------\n");
-        printData(dim, index, index+1, e.data);
+        for(int j = 0; j< dim; j++) {
+            cluster_centroid[j]+= e.data[j];
+        }
     }
+
+    for(int i = 0; i< dim ; i++) {
+        cluster_centroid[i] = cluster_centroid[i] /cluster_size;
+    }
+}
+
+int calculateClusterBoundary() {
+
 }
 
 int biPartition(int dim, int i0, int in, double *data, int cluster_start, int cluster_size,
                 double *cluster_bdry, double *cluster_centroid, int *cluster_assign) {
 //what is i0, in, cluster_assign
-    printf("No problem");
     calculateClusterCentroids(dim, data, cluster_start, cluster_size, cluster_centroid, cluster_bdry);
+    calculateClusterBoundary();
 }
 
 int kdTree(int dim, int ndata, double *data, int kk, int *cluster_start, int *cluster_size,
@@ -66,12 +76,13 @@ int kdTree(int dim, int ndata, double *data, int kk, int *cluster_start, int *cl
     cluster_size[0] = ndata;
     cluster_start[0] = 0;
 
-    while(current_kk < kk) {
-        for(int i = 0; i < current_kk; i++) {
-           // biPartition(dim, i, current_kk, data, cluster_start[i], cluster_size[i], cluster_bdry[i], cluster_centroid[i], cluster_assign[i]);
-        }
-        current_kk *= 2;
-    }
+    //while(current_kk < kk) {
+      //  for(int i = 0; i < current_kk; i++) {
+      int i=0;
+           biPartition(dim, i, current_kk, data, cluster_start[i], cluster_size[i], cluster_bdry[i], cluster_centroid[i], cluster_assign[i]);
+        //}
+        //current_kk *= 2;
+    //}
 }
 
 //generate dataSet
@@ -108,8 +119,8 @@ int **allocateDoublePointerVariable(int kk, int array_size) {
 int main() {
     srand((unsigned)time(NULL));
     //declare input variables
-    const int N_DATA = 20;
-    const int DIM = 8;
+    const int N_DATA = 10;
+    const int DIM = 3;
     const int KK = 8;
     double *data;
 
@@ -126,10 +137,10 @@ int main() {
     //generate data set
     data = (double*)malloc(N_DATA*DIM*sizeof(double));
     generateData(DIM, N_DATA, data);
-    //printData(DIM, N_DATA, data);
+    printData(DIM, N_DATA, data);
     //printf("-----------------\n");
 
     //start KDTree
-    //kdTree(DIM, N_DATA, data, KK, cluster_start, cluster_size, cluster_bdry, cluster_centroid, cluster_assign);
+    kdTree(DIM, N_DATA, data, KK, cluster_start, cluster_size, cluster_bdry, cluster_centroid, cluster_assign);
     //printResult(DIM, N_DATA, data,  KK, cluster_start, cluster_size, cluster_assign, cluster_bdry, cluster_centroid);
 }
