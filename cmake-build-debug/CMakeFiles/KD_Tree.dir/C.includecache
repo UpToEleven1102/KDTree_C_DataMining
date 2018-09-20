@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+C:/Users/Huyen VU/Documents/Work Place/TTU/Data Minin/KD_Tree/main.c
+stdio.h
+-
+stdlib.h
+-
+time.h
+-
+math.h
+-
+

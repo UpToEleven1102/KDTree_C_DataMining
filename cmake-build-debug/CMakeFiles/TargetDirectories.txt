@@ -1,0 +1,3 @@
+C:/Users/Huyen VU/Documents/Work Place/TTU/Data Minin/KD_Tree/cmake-build-debug/CMakeFiles/KD_Tree.dir
+C:/Users/Huyen VU/Documents/Work Place/TTU/Data Minin/KD_Tree/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Huyen VU/Documents/Work Place/TTU/Data Minin/KD_Tree/cmake-build-debug/CMakeFiles/rebuild_cache.dir
