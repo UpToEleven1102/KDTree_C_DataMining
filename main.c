@@ -7,6 +7,7 @@ struct dataPoint {
     double *data;
 };
 
+//Utility thingies
 int *allocatePointerVariable(int array_size) {
     int *cluster_variable = (int *)malloc(array_size*sizeof(int));
     for(int i=0; i<array_size; i++) {
@@ -23,7 +24,6 @@ int **allocateDoublePointerVariable(int kk, int array_size) {
     return cluster_variable;
 }
 
-//Utility thingies
 double square(double i) {
     return i*i;
 }
@@ -60,7 +60,6 @@ void printData(int dim, int ndata, double *data) {
 }
 
 //KDTree thingies
-
 int calculateClusterBoundary() {
 
 }
@@ -88,10 +87,10 @@ int calculateClusterCentroids(int dim, double *data, int cluster_start, int clus
         cluster_centroid[i] = cluster_centroid[i] /cluster_size;
     }
 
-    printf("-----------------------cluster centroid---------------\n");
-    for(int i =0; i<dim; i++) {
-        printf("%f \n", cluster_centroid[i]);
-    }
+//    printf("-----------------------cluster centroid---------------\n");
+//    for(int i =0; i<dim; i++) {
+//        printf("%f \n", cluster_centroid[i]);
+//    }
 }
 
 
@@ -110,32 +109,60 @@ int findMaxVariant(int dim, double *data, int cluster_start, int cluster_size, d
     }
     double max_variant = 0;
     int max_variant_index = 0;
-    printf("------------------variants----------------- \n");
+//    printf("------------------variants----------------- \n");
     for(int i = 0; i< dim; i++) {
         variants[i] /= cluster_size;
         if (max_variant < variants[i]) {
             max_variant = variants[i];
             max_variant_index = i;
         }
-        printf("%f    \n", variants[i]);
+//        printf("%f    \n", variants[i]);
     }
     return max_variant_index;
 }
 
-int biPartition(int dim, int cluster_idx, int current_kk, double *data, int cluster_start, int cluster_size,
+void swapElementToTop(int dim, double *data, int cluster_start, int elementIdx) {
+    struct dataPoint topElement = getElement(dim, cluster_start/dim, data);
+    struct dataPoint element = getElement(dim, elementIdx, data);
+
+    for(int i = 0; i< dim; i++){
+       data[cluster_start+i] = element.data[i];
+       data[elementIdx * dim + i] = topElement.data[i];
+    }
+}
+
+int rearrangeData(int dim, int partition_dimension, double *data, int cluster_start, int cluster_size, double *cluster_bdry, double* cluster_centroid,
+        int *cluster_assign) {
+    //invariant: based on cluster_centroid and value of datapoint at dimension = partitionDimension, separate the cluster into 2 small clusters
+    for(int i= 0; i< cluster_size; i++) {
+        int idx = cluster_start + i;
+        struct dataPoint element = getElement(dim, idx, data);
+        if(cluster_centroid[partition_dimension] < element.data[partition_dimension]) {
+            swapElementToTop(dim, data, cluster_start, idx);
+        }
+    }
+}
+
+int calculateNewOutputs(){
+    //invariant: find new cluster_starts, cluster_sizes, cluster_bdrys
+}
+
+int biPartition(int dim, double *data, int cluster_start, int cluster_size,
         double *cluster_bdry, double* cluster_centroid, int *cluster_assign) {
     calculateClusterCentroids(dim, data, cluster_start, cluster_size, cluster_centroid, cluster_bdry);
     int partitionDimension = findMaxVariant(dim, data, cluster_start, cluster_size, cluster_centroid);
-
-    printf(" -----------partitionDimension--------------- \n");
-    printf("%d \n", partitionDimension);
+    rearrangeData(dim, partitionDimension, data, cluster_start, cluster_size, cluster_bdry, cluster_centroid, cluster_assign);
+    calculateNewOutputs();
+//    printf(" -----------partitionDimension--------------- \n");
+//    printf("%d \n", partitionDimension);
 }
 
 int biPartitionClusters(int dim, int current_kk, int *cluster_indices, double *data, int *cluster_start, int *cluster_size,
         double **cluster_bdry, double **cluster_centroid, int *cluster_assign) {
     for( int i = 0; i < current_kk; i++) {
         int idx = cluster_indices[i];
-        biPartition(dim, idx, current_kk, data, cluster_start[idx], cluster_size[idx], cluster_bdry[idx], cluster_centroid[idx], cluster_assign);
+        biPartition(dim, data, cluster_start[idx], cluster_size[idx], cluster_bdry[idx],
+                cluster_centroid[idx], cluster_assign);
     }
 }
 
@@ -191,7 +218,10 @@ int main() {
     generateData(DIM, N_DATA, data);
     printData(DIM, N_DATA, data);
 
+    //swapElementToTop(DIM, data, 0, 2);
+
     //start KDTree
     kdTree(DIM, N_DATA, data, KK, cluster_start, cluster_size, cluster_bdry, cluster_centroid, cluster_assign);
+    printData(DIM, N_DATA, data);
     //printResult(DIM, N_DATA, data,  KK, cluster_start, cluster_size, cluster_assign, cluster_bdry, cluster_centroid);
 }
