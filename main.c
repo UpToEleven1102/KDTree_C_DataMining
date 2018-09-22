@@ -33,10 +33,6 @@ double **allocateDoublePointerVariable(int kk, int array_size) {
     return cluster_variable;
 }
 
-double square(double i) {
-    return i*i;
-}
-
 struct dataPoint emptyDataPoint(int dim) {
     struct dataPoint out;
     out.data = (double*)malloc(dim * sizeof(double));
@@ -325,7 +321,7 @@ int main() {
 
     //start KDTree
     kdTree(DIM, N_DATA, data, KK, cluster_start, cluster_size, cluster_bdry, cluster_centroid);
-    //printResult(DIM, data,  KK, cluster_start, cluster_size, cluster_bdry, cluster_centroid);
+    printResult(DIM, data,  KK, cluster_start, cluster_size, cluster_bdry, cluster_centroid);
 
     //start Search
     double *query = (double*) malloc(DIM * sizeof(double));
