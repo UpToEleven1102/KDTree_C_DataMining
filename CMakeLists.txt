@@ -3,4 +3,4 @@ project(KD_Tree C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(KD_Tree main.c)
+add_executable(KD_Tree main.c lib/utilities.c lib/utilities.h lib/kdTree.c lib/kdTree.h)
