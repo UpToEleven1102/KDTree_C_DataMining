@@ -67,9 +67,12 @@ void printData(int dim, int ndata, double *data) {
     }
 }
 
-void printCluster(int dim, int idx, int cluster_start, int cluster_size, double *cluster_bdry, double *cluster_centroid,  double *data) {
-    printf("%d, %d, %d, %d \n", dim, idx, cluster_start, cluster_size);
+int printCluster(int dim, int idx, int cluster_start, int cluster_size, double *cluster_bdry, double *cluster_centroid,  double *data) {
+    printf("Cluster Start: %d, Cluster Size: %d \n", cluster_start, cluster_size);
 
+    if (cluster_size == 0) {
+        return 0;
+    }
     printf("---------Data Points--------\n");
     for (int i = 0; i < cluster_size; i++) {
         struct dataPoint e = getElement(dim, cluster_start/dim + i, data);
@@ -92,7 +95,8 @@ void printCluster(int dim, int idx, int cluster_start, int cluster_size, double 
     }
 }
 
-void printResult(int dim, int ndata, double *data, int kk, int *cluster_start, int *cluster_size, double **cluster_bdry, double **cluster_centroid){
+void printResult(int dim, double *data, int kk, int *cluster_start, int *cluster_size, double **cluster_bdry, double **cluster_centroid){
+    printf("\n\n\nFinal KD TREE: \n");
     for (int i=0; i< kk; i++) {
         printf("------------------cluster %d ----------------- \n", i);
         printCluster(dim, i, cluster_start[i], cluster_size[i], cluster_bdry[i], cluster_centroid[i], data);
@@ -102,7 +106,7 @@ void printResult(int dim, int ndata, double *data, int kk, int *cluster_start, i
 
 //KDTree thingies
 int *allocateTempIndices(int kk, int current_kk) {
-    int *temp_indices = (int*)allocatePointerVariable(current_kk);
+    int *temp_indices = allocatePointerVariable(current_kk);
     temp_indices[0] = 0;
     for(int i = 1; i< current_kk; i++) {
         temp_indices[i] = temp_indices[i-1]+kk/current_kk;
@@ -130,31 +134,31 @@ int calculateClusterCentroids(int dim, double *data, int cluster_start, int clus
 }
 
 
-int findMaxVariant(int dim, double *data, int cluster_start, int cluster_size, double* cluster_centroid) {
-//invariant: calculate variants of each dimension using formula var x = 1/n (sum (xi- |x|)^2)
-    double *variants = (double*) malloc(dim * sizeof(double));
+int findMaxVariance(int dim, double *data, int cluster_start, int cluster_size, double* cluster_centroid) {
+//invariant: calculate variances of each dimension using formula var x = 1/n (sum (xi- |x|)^2)
+    double *variances = (double*) malloc(dim * sizeof(double));
     for(int i = 0; i< dim; i++) {
-        variants[i] = 0;
+        variances[i] = 0;
     }
     for(int i = 0; i< cluster_size; i++) {
         int index = cluster_start/dim + i;
         struct dataPoint element = getElement(dim, index, data);
         for (int j =0; j< dim; j++) {
-            variants[j] += square(element.data[j] - cluster_centroid[j]);
+            variances[j] += square(element.data[j] - cluster_centroid[j]);
         }
     }
-    double max_variant = 0;
-    int max_variant_index = 0;
-    printf("------------------variants----------------- \n");
+    double max_variance = 0;
+    int max_variance_index = 0;
+    printf("------------------variances----------------- \n");
     for(int i = 0; i< dim; i++) {
-        variants[i] = variants[i] /cluster_size;
-        if (max_variant < variants[i]) {
-            max_variant = variants[i];
-            max_variant_index = i;
+        variances[i] = variances[i] /cluster_size;
+        if (max_variance < variances[i]) {
+            max_variance = variances[i];
+            max_variance_index = i;
         }
-        printf("%f    \n", variants[i]);
+        printf("%f    \n", variances[i]);
     }
-    return max_variant_index;
+    return max_variance_index;
 }
 
 void shiftElementUpward(int dim, double *data, int counter, int cluster_start, int elementIdx) {
@@ -211,14 +215,6 @@ void calculateNewOutputs(int dim, int kk, int upper_cluster_size, int current_kk
     cluster_size[idx] = upper_cluster_size;
     cluster_size[lower_cluster_idx] = lower_cluster_size;
 
-//    printf("-------------cluster_size---------------\n");
-//    printf("upper cluster: %d\n", upper_cluster_size);
-//    printf("lower cluster: %d\n", lower_cluster_size);
-//
-//    printf("-------------cluster_start---------------\n");
-//    printf("lower cluster: %d\n", cluster_start[idx]);
-//    printf("upper cluster: %d\n", cluster_start[lower_cluster_idx]);
-
     //calculate cluster centroids
     calculateClusterCentroids(dim, data, cluster_start[idx], cluster_size[idx], cluster_centroid[idx]);
     calculateClusterCentroids(dim, data, cluster_start[lower_cluster_idx], cluster_size[lower_cluster_idx], cluster_centroid[lower_cluster_idx]);
@@ -232,49 +228,41 @@ int rearrangeData(int dim, int partition_dimension, double *data, int cluster_st
     //invariant: based on cluster_centroid and value of datapoint at dimension = partitionDimension, separate the cluster into 2 small clusters
     //return number of upper cluster
     int counter = 0;
-
-    printf(" -----------partitionDimension--------------- \n");
-    printf("%d \n", partition_dimension);
-
     for(int i= 0; i< cluster_size; i++) {
         int idx = cluster_start/dim + i;
         struct dataPoint element = getElement(dim, idx, data);
         if(cluster_centroid[partition_dimension] < element.data[partition_dimension]) {
-            printf("%f --- %f\n", cluster_centroid[partition_dimension], element.data[partition_dimension]);
+            //printf("%f --- %f\n", cluster_centroid[partition_dimension], element.data[partition_dimension]);
             shiftElementUpward(dim, data, counter, cluster_start, idx);
             counter ++;
         }
     }
 
-    printf("counter: %d \n", counter);
-
     return counter;
 }
 
-int biPartition(int dim, double *data, int cluster_start, int cluster_size,
-        double *cluster_bdry, double* cluster_centroid) {
+int biPartition(int dim, double *data, int cluster_start, int cluster_size, double* cluster_centroid) {
     printf("-------------cluster centroid---------------\n");
     for(int i =0; i<dim; i++) {
         printf("%f \n", cluster_centroid[i]);
     }
 
-    int partitionDimension = findMaxVariant(dim, data, cluster_start, cluster_size, cluster_centroid);
+    int partitionDimension = findMaxVariance(dim, data, cluster_start, cluster_size, cluster_centroid);
     int upper_cluster_size = rearrangeData(dim, partitionDimension, data, cluster_start, cluster_size, cluster_centroid);
     return upper_cluster_size;
 }
 
-int biPartitionClusters(int dim, int kk, int current_kk, const *cluster_indices, double *data, int *cluster_start, int *cluster_size,
+int biPartitionClusters(int dim, int kk, int current_kk, const int *cluster_indices, double *data, int *cluster_start, int *cluster_size,
         double **cluster_bdry, double **cluster_centroid) {
     for( int i = 0; i < current_kk; i++) {
         int idx = cluster_indices[i];
-        int upper_cluster_size = biPartition(dim, data, cluster_start[idx], cluster_size[idx], cluster_bdry[idx], cluster_centroid[idx]);
+        int upper_cluster_size = biPartition(dim, data, cluster_start[idx], cluster_size[idx], cluster_centroid[idx]);
         calculateNewOutputs(dim, kk, upper_cluster_size, current_kk, idx, data, cluster_start, cluster_size, cluster_centroid, cluster_bdry);
     }
 }
 
 int kdTree(int dim, int ndata, double *data, int kk, int *cluster_start, int *cluster_size,
            double **cluster_bdry, double **cluster_centroid) {
-
     int current_kk = 1;
     cluster_size[0] = ndata;
     cluster_start[0] = 0;
@@ -303,9 +291,9 @@ void generateData(int dim, int ndata, double *data) {
 int main() {
     srand((unsigned)time(NULL));
     //declare input variables
-    const int N_DATA = 100;
+    const int N_DATA = 4;
     const int DIM = 4;
-    const int KK = 16;
+    const int KK = 4;
     double *data;
 
     //declare output variables
@@ -326,5 +314,5 @@ int main() {
 
     //start KDTree
     kdTree(DIM, N_DATA, data, KK, cluster_start, cluster_size, cluster_bdry, cluster_centroid);
-    printResult(DIM, N_DATA, data,  KK, cluster_start, cluster_size, cluster_bdry, cluster_centroid);
+    printResult(DIM, data,  KK, cluster_start, cluster_size, cluster_bdry, cluster_centroid);
 }
