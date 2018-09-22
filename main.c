@@ -67,7 +67,7 @@ void printData(int dim, int ndata, double *data) {
     }
 }
 
-int printCluster(int dim, int idx, int cluster_start, int cluster_size, double *cluster_bdry, double *cluster_centroid,  double *data) {
+int printCluster(int dim, int cluster_start, int cluster_size, double *cluster_bdry, double *cluster_centroid,  double *data) {
     printf("Cluster Start: %d, Cluster Size: %d \n", cluster_start, cluster_size);
 
     if (cluster_size == 0) {
@@ -75,7 +75,7 @@ int printCluster(int dim, int idx, int cluster_start, int cluster_size, double *
     }
     printf("---------Data Points--------\n");
     for (int i = 0; i < cluster_size; i++) {
-        struct dataPoint e = getElement(dim, cluster_start/dim + i, data);
+        struct dataPoint e = getElement(dim, cluster_start + i, data);
         printf("%d-----\n", i);
         printArray(dim, 1, e.data);
     }
@@ -99,13 +99,16 @@ void printResult(int dim, double *data, int kk, int *cluster_start, int *cluster
     printf("\n\n\nFinal KD TREE: \n");
     for (int i=0; i< kk; i++) {
         printf("------------------cluster %d ----------------- \n", i);
-        printCluster(dim, i, cluster_start[i], cluster_size[i], cluster_bdry[i], cluster_centroid[i], data);
+        printCluster(dim, cluster_start[i], cluster_size[i], cluster_bdry[i], cluster_centroid[i], data);
     }
 }
 
 
 //KDTree thingies
+
+//temporarily calculate indices for new clusters
 int *allocateTempIndices(int kk, int current_kk) {
+    //invariant: index for next cluster will be previous index + kk/current_kk
     int *temp_indices = allocatePointerVariable(current_kk);
     temp_indices[0] = 0;
     for(int i = 1; i< current_kk; i++) {
@@ -120,16 +123,19 @@ int calculateClusterCentroids(int dim, double *data, int cluster_start, int clus
         cluster_centroid[i] = 0;
     }
 
-    for(int i = 0; i< cluster_size; i++) {
-        int index = cluster_start/dim + i;
-        struct dataPoint e = getElement(dim, index, data);
+    if(cluster_size == 0) {
+        return 0;
+    }
+
+    for(int i = 0; i < cluster_size; i++) {
+        struct dataPoint e = getElement(dim, cluster_start + i, data);
         for(int j = 0; j< dim; j++) {
             cluster_centroid[j]+= e.data[j];
         }
     }
 
-    for(int i = 0; i< dim ; i++) {
-        cluster_centroid[i] = cluster_centroid[i] /cluster_size;
+    for(int i = 0; i < dim ; i++) {
+        cluster_centroid[i] = cluster_centroid[i] / cluster_size;
     }
 }
 
@@ -140,13 +146,14 @@ int findMaxVariance(int dim, double *data, int cluster_start, int cluster_size, 
     for(int i = 0; i< dim; i++) {
         variances[i] = 0;
     }
+
     for(int i = 0; i< cluster_size; i++) {
-        int index = cluster_start/dim + i;
-        struct dataPoint element = getElement(dim, index, data);
+        struct dataPoint element = getElement(dim, cluster_start + i, data);
         for (int j =0; j< dim; j++) {
             variances[j] += square(element.data[j] - cluster_centroid[j]);
         }
     }
+
     double max_variance = 0;
     int max_variance_index = 0;
     printf("------------------variances----------------- \n");
@@ -156,13 +163,13 @@ int findMaxVariance(int dim, double *data, int cluster_start, int cluster_size, 
             max_variance = variances[i];
             max_variance_index = i;
         }
-        printf("%f    \n", variances[i]);
+        printf("%f  \n", variances[i]);
     }
     return max_variance_index;
 }
 
 void shiftElementUpward(int dim, double *data, int counter, int cluster_start, int elementIdx) {
-    int swapElementIndex = cluster_start/dim + counter;
+    int swapElementIndex = cluster_start + counter;
     struct dataPoint topElement = getElement(dim, swapElementIndex, data);
     struct dataPoint element = getElement(dim, elementIdx, data);
 
@@ -181,7 +188,7 @@ int calculateClusterBoundaries(int dim, double *data, int cluster_start, int clu
     }
 
     for (int i =0; i< cluster_size; i++ ) {
-        struct dataPoint element = getElement(dim, cluster_start/dim + i, data);
+        struct dataPoint element = getElement(dim, cluster_start + i, data);
         for(int j =0; j< dim; j++) {
             if(tempMin[j] > element.data[j]) {
                 tempMin[j] = element.data[j];
@@ -209,7 +216,7 @@ void calculateNewOutputs(int dim, int kk, int upper_cluster_size, int current_kk
     int lower_cluster_idx = idx + (kk/(current_kk * 2));
 
     //assign new cluster_starts
-    cluster_start[lower_cluster_idx] = cluster_start[idx] + (upper_cluster_size*dim);
+    cluster_start[lower_cluster_idx] = cluster_start[idx] + upper_cluster_size;
 
     //assign new cluster_sizes
     cluster_size[idx] = upper_cluster_size;
@@ -229,7 +236,7 @@ int rearrangeData(int dim, int partition_dimension, double *data, int cluster_st
     //return number of upper cluster
     int counter = 0;
     for(int i= 0; i< cluster_size; i++) {
-        int idx = cluster_start/dim + i;
+        int idx = cluster_start + i;
         struct dataPoint element = getElement(dim, idx, data);
         if(cluster_centroid[partition_dimension] < element.data[partition_dimension]) {
             //printf("%f --- %f\n", cluster_centroid[partition_dimension], element.data[partition_dimension]);
