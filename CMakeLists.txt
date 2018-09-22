@@ -3,4 +3,4 @@ project(KD_Tree C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(KD_Tree main.c)
+add_executable(KD_Tree main.c kdTreeSearch.c kdTreeSearch.h)
