@@ -5,11 +5,6 @@
 #include "lib/utilities.h"
 #include "lib/kdTree.h"
 
-//KDTree thingies
-
-//temporarily calculate indices for new clusters
-
-
 //generate dataSet
 void generateDataPoint(int index, int dim, double *data) {
     for(int i=0; i<dim;i++) {
