@@ -22,9 +22,12 @@ int *allocatePointerVariable(int array_size) {
 }
 
 double **allocateDoublePointerVariable(int kk, int array_size) {
-    double **cluster_variable = (double**)malloc(kk*sizeof(int *));
+    double **cluster_variable = (double**)malloc(kk*sizeof(double*));
     for(int i=0; i < kk; i++) {
-        cluster_variable[i] = (double*) malloc(sizeof(array_size*sizeof(double)));
+        cluster_variable[i] = (double*) malloc(array_size*sizeof(double));
+        for(int j=0; j< array_size; j++){
+            cluster_variable[i][j] = 0;
+        }
     }
     return cluster_variable;
 }
@@ -75,18 +78,18 @@ void printCluster(int dim, int idx, int cluster_start, int cluster_size, double 
     }
 
     printf("-------Cluster Boundaries-------\n");
-    for(int i=0; i< dim; i++) {
+    for(int i=0; i< 2*dim; i++) {
         if(i%2 ==0){
-            printf("Dimension %d - min %f \n", i, cluster_bdry[i*2-1]);
+            printf("min %f \n", cluster_bdry[i]);
         } else {
-            printf("Dimension %d - max %f \n", i, cluster_bdry[i*2]);
+            printf("max %f \n", cluster_bdry[i]);
         }
     }
 
-//    printf("-------Cluster Centroid---------\n");
-//    for(int i=0; i<dim; i++){
-//        printf("Dimension %d: %f", i, cluster_centroid[i]);
-//    }
+    printf("-------Cluster Centroid---------\n");
+    for(int i=0; i<dim; i++){
+        printf("Dimension %d: %f\n", i, cluster_centroid[i]);
+    }
 }
 
 void printResult(int dim, int ndata, double *data, int kk, int *cluster_start, int *cluster_size, double **cluster_bdry, double **cluster_centroid){
@@ -107,8 +110,12 @@ int *allocateTempIndices(int kk, int current_kk) {
     return temp_indices;
 }
 
-int calculateClusterCentroids(int dim, double *data, int cluster_start, int cluster_size, double *cluster_centroid, double *cluster_bdry) {
+int calculateClusterCentroids(int dim, double *data, int cluster_start, int cluster_size, double *cluster_centroid) {
 //invariant: mean x = 1/n sum(x1+x2+...)
+    for(int i=0; i<dim; i++) {
+        cluster_centroid[i] = 0;
+    }
+
     for(int i = 0; i< cluster_size; i++) {
         int index = cluster_start/dim + i;
         struct dataPoint e = getElement(dim, index, data);
@@ -119,11 +126,6 @@ int calculateClusterCentroids(int dim, double *data, int cluster_start, int clus
 
     for(int i = 0; i< dim ; i++) {
         cluster_centroid[i] = cluster_centroid[i] /cluster_size;
-    }
-
-    printf("-----------------------cluster centroid---------------\n");
-    for(int i =0; i<dim; i++) {
-        printf("%f \n", cluster_centroid[i]);
     }
 }
 
@@ -166,12 +168,11 @@ void shiftElementUpward(int dim, double *data, int counter, int cluster_start, i
     }
 }
 
-
-int calculateClusterBoundaries(int dim, int cluster_idx, double *data, int cluster_start, int cluster_size, double **cluster_bdry) {
+int calculateClusterBoundaries(int dim, double *data, int cluster_start, int cluster_size, double *cluster_bdry) {
     double tempMin[dim];
     double tempMax[dim];
     for (int i=0; i< dim; i++) {
-        tempMin[i] = 0;
+        tempMin[i] = 1;
         tempMax[i] = 0;
     }
 
@@ -190,15 +191,15 @@ int calculateClusterBoundaries(int dim, int cluster_idx, double *data, int clust
 
     int cluster_bdry_idx = 0;
     for (int i =0; i< dim; i++) {
-        cluster_bdry[cluster_idx][cluster_bdry_idx] = tempMin[i];
+        cluster_bdry[cluster_bdry_idx] = tempMin[i];
         cluster_bdry_idx++;
-        cluster_bdry[cluster_idx][cluster_bdry_idx] = tempMax[i];
+        cluster_bdry[cluster_bdry_idx] = tempMax[i];
         cluster_bdry_idx++;
     }
 }
 
-int calculateNewOutputs(int dim, int kk, int upper_cluster_size, int current_kk, int idx, double *data, int *cluster_start, int *cluster_size,
-        double **cluster_bdry){
+void calculateNewOutputs(int dim, int kk, int upper_cluster_size, int current_kk, int idx, double *data, int *cluster_start, int *cluster_size,
+        double **cluster_centroid, double **cluster_bdry){
     //invariant: find new cluster_starts, cluster_sizes, cluster_bdrys for two new clusters based on cluster_indices
     int lower_cluster_size = cluster_size[idx] - upper_cluster_size;
     int lower_cluster_idx = idx + (kk/(current_kk * 2));
@@ -218,9 +219,13 @@ int calculateNewOutputs(int dim, int kk, int upper_cluster_size, int current_kk,
 //    printf("lower cluster: %d\n", cluster_start[idx]);
 //    printf("upper cluster: %d\n", cluster_start[lower_cluster_idx]);
 
+    //calculate cluster centroids
+    calculateClusterCentroids(dim, data, cluster_start[idx], cluster_size[idx], cluster_centroid[idx]);
+    calculateClusterCentroids(dim, data, cluster_start[lower_cluster_idx], cluster_size[lower_cluster_idx], cluster_centroid[lower_cluster_idx]);
+
     //calculate cluster boundaries:
-    calculateClusterBoundaries(dim, idx, data, cluster_start[idx], cluster_size[idx], cluster_bdry);
-    calculateClusterBoundaries(dim, lower_cluster_idx, data,  cluster_start[lower_cluster_idx], cluster_size[lower_cluster_idx], cluster_bdry);
+    calculateClusterBoundaries(dim, data, cluster_start[idx], cluster_size[idx], cluster_bdry[idx]);
+    calculateClusterBoundaries(dim, data,  cluster_start[lower_cluster_idx], cluster_size[lower_cluster_idx], cluster_bdry[lower_cluster_idx]);
 }
 
 int rearrangeData(int dim, int partition_dimension, double *data, int cluster_start, int cluster_size,const double* cluster_centroid) {
@@ -248,19 +253,22 @@ int rearrangeData(int dim, int partition_dimension, double *data, int cluster_st
 
 int biPartition(int dim, double *data, int cluster_start, int cluster_size,
         double *cluster_bdry, double* cluster_centroid) {
-    calculateClusterCentroids(dim, data, cluster_start, cluster_size, cluster_centroid, cluster_bdry);
+    printf("-------------cluster centroid---------------\n");
+    for(int i =0; i<dim; i++) {
+        printf("%f \n", cluster_centroid[i]);
+    }
+
     int partitionDimension = findMaxVariant(dim, data, cluster_start, cluster_size, cluster_centroid);
     int upper_cluster_size = rearrangeData(dim, partitionDimension, data, cluster_start, cluster_size, cluster_centroid);
     return upper_cluster_size;
 }
 
-int biPartitionClusters(int dim, int kk, int current_kk, int *cluster_indices, double *data, int *cluster_start, int *cluster_size,
+int biPartitionClusters(int dim, int kk, int current_kk, const *cluster_indices, double *data, int *cluster_start, int *cluster_size,
         double **cluster_bdry, double **cluster_centroid) {
     for( int i = 0; i < current_kk; i++) {
         int idx = cluster_indices[i];
-        int upper_cluster_size = biPartition(dim, data, cluster_start[idx], cluster_size[idx], cluster_bdry[idx],
-                cluster_centroid[idx]);
-        calculateNewOutputs(dim, kk, upper_cluster_size, current_kk, idx, data, cluster_start, cluster_size, cluster_bdry);
+        int upper_cluster_size = biPartition(dim, data, cluster_start[idx], cluster_size[idx], cluster_bdry[idx], cluster_centroid[idx]);
+        calculateNewOutputs(dim, kk, upper_cluster_size, current_kk, idx, data, cluster_start, cluster_size, cluster_centroid, cluster_bdry);
     }
 }
 
@@ -270,6 +278,7 @@ int kdTree(int dim, int ndata, double *data, int kk, int *cluster_start, int *cl
     int current_kk = 1;
     cluster_size[0] = ndata;
     cluster_start[0] = 0;
+    calculateClusterCentroids(dim, data, cluster_start[0], ndata, cluster_centroid[0]);
 
     while(current_kk < kk) {
         int *cluster_indices = allocateTempIndices(kk, current_kk);
@@ -294,9 +303,9 @@ void generateData(int dim, int ndata, double *data) {
 int main() {
     srand((unsigned)time(NULL));
     //declare input variables
-    const int N_DATA = 10;
-    const int DIM = 2;
-    const int KK = 2;
+    const int N_DATA = 100;
+    const int DIM = 4;
+    const int KK = 16;
     double *data;
 
     //declare output variables
@@ -317,7 +326,5 @@ int main() {
 
     //start KDTree
     kdTree(DIM, N_DATA, data, KK, cluster_start, cluster_size, cluster_bdry, cluster_centroid);
-
-    printData(DIM, N_DATA, data);
     printResult(DIM, N_DATA, data,  KK, cluster_start, cluster_size, cluster_bdry, cluster_centroid);
 }
