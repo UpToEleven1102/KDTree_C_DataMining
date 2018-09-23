@@ -1,7 +1,3 @@
-//
-// Created by Huyen VU on 9/22/2018.
-//
-
 #include <malloc.h>
 #include <stdio.h>
 #include "kdTree.h"

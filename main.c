@@ -22,7 +22,7 @@ void generateData(int dim, int ndata, double *data) {
 int main() {
     srand((unsigned)time(NULL));
     //declare input variables
-    const int N_DATA = 4;
+    const int N_DATA = 10;
     const int DIM = 4;
     const int KK = 4;
     double *data;
