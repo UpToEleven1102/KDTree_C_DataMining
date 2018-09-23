@@ -1,7 +1,3 @@
-//
-// Created by Huyen VU on 9/22/2018.
-//
-
 #ifndef KD_TREE_UTILITIES_H
 #define KD_TREE_UTILITIES_H
 struct dataPoint {
