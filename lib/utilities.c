@@ -1,6 +1,7 @@
 #include "utilities.h"
 #include <stdio.h>
 #include <malloc.h>
+
 int *allocatePointerVariable(int array_size) {
     int *cluster_variable = (int *)malloc(array_size*sizeof(int));
     for(int i=0; i<array_size; i++) {

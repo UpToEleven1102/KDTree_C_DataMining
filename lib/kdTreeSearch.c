@@ -1,13 +1,8 @@
-//
-// Created by Huyen VU on 9/22/2018.
-//
-
 #include <malloc.h>
 #include <stdio.h>
 #include <math.h>
 #include "kdTreeSearch.h"
 #include "utilities.h"
-
 
 //utilities:
 void printSearchResults(int dim, int kk, const double *query, double *data, int *cluster_start, int *cluster_size,
