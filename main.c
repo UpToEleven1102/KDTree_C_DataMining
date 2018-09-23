@@ -9,7 +9,7 @@
 //generate dataSet
 void generateDataPoint(int index, int dim, double *data) {
     for(int i=0; i<dim;i++) {
-        data[index + i] = 1/(double)(rand()%20 +1);
+        data[index + i] = (double)(rand()%10)/10;
     }
 }
 
