@@ -7,7 +7,7 @@
 
 
 
-File compilation
+## File compilation
 
 Windows
 GNU bash, version 4.1.11(2)-release (x86_64-unknown-cygwin)
@@ -20,37 +20,31 @@ gcc main.c ./lib/utilities.c ./lib/kdTree.c -std+gnu99 -o kdtree
 run ./kdtree in ubuntu
 
 
-main.c Documentation
+## main.c Documentation
 
 main.c is used to generate the dataset that will then be sorted into a KD-Tree
-main.c delacares and pre-initializes output values for the kdTree function
-main.c generates random dataset data by using 1/rand() to generate numbers between 0 and 1
-main.c generates datasets containing n_data points, n_dimensions, and K^2 clusters(ex 2,4,8,16,....ect)
-main.c passes generated dataset to the kdTree function for sorting into a KD-Tree
+- delacares and pre-initializes output values for the kdTree function
+- generates random dataset data by using (double)(rand()%10)/10 to generate numbers between 0 and 1
+- generates datasets containing n_data points, n_dimensions, and K^2 clusters(ex 2,4,8,16,....ect)
+- passes generated dataset to the kdTree function for sorting into a KD-Tree
 
 
 
-kdTree.c Documentation
+## kdTree.c Documentation
 
 kdTree.c receives data from main.c for building the KD-Tree
-kdTree.c builds the entries of the KD-Tree based on bi-partition function
-kdTree.c calculates the max variance and centroid of each cluster that is passed through it
-max variance is computed using: var x = 1/n (sum (xi- |x|)^2)
-cluster centroid is computed using: mean x = 1/n sum(x1+x2+...)
+- builds the entries of the KD-Tree based on bi-partition function
+- calculates the max variance and centroid of each cluster that is passed through it max variance is computed using: var x = 1/n (sum (xi- |x|)^2) 
+- cluster centroid is computed using: mean x = 1/n sum(x1+x2+...)
 
-kdTree.c shifts the elements of previous clusters in the KD-Tree to make room for new clusters so 
-variance is preserved between clusters
+- clusters can b located by using cluster_start and cluster_size
 
-kdTree.c calculates the cluster boundaries of each cluster in n-dimensions as to show an accurate 
-physicial discription of each cluster
+- calculates the cluster boundaries of each cluster in n-dimensions as to show an accurate physicial discription of each cluster
 
-kdTree.c uses the biPartition function to split each cluster into 2 subclusters until the 
-number of clusters has reached k^2 clusters.
+- uses the biPartition function to split each cluster into 2 subclusters until the number of clusters has reached k^2 clusters.
 
 
 
-utilities.c Documentation#
+## utilities.c Documentation
 
-utilities.c recieves data from kdTree.c and main.c
-utilities.c is used to allocate pointer variables for both kdTree.c and main.c
-print out starting data, cluster data, and final results of the KD-Tree construction
+utilities.c is a group of helper functions used to facilitate the coding process
