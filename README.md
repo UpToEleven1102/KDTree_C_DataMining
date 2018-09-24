@@ -11,13 +11,17 @@
 
 Windows
 GNU bash, version 4.1.11(2)-release (x86_64-unknown-cygwin)
+```
 gcc main.c lib/utilities.c lib/kdtree.c -o KDTree -std=gnu99
-run KDTree.exe file in Windows
+```
+run ```KDTree.exe file in Windows```
 
 Ubuntu Linux 18.04 LTS
 gcc version 7.3.0 (Ubuntu 7.3.0-16ubuntu3)
+```
 gcc main.c ./lib/utilities.c ./lib/kdTree.c -std+gnu99 -o kdtree
-run ./kdtree in ubuntu
+```
+run ```./kdtree in ubuntu```
 
 
 ## main.c Documentation
@@ -36,8 +40,9 @@ kdTree.c receives data from main.c for building the KD-Tree
 - builds the entries of the KD-Tree based on bi-partition function
 - calculates the max variance and centroid of each cluster that is passed through it max variance is computed using: var x = 1/n (sum (xi- |x|)^2) 
 - cluster centroid is computed using: mean x = 1/n sum(x1+x2+...)
+- clusters are divided to smaller clusters at the dimension that has largest value of variance. kdTree.c shifts the elements have larger value than value of centroid at that dimension up in the KD-Tree to make room for new clusters so variance is preserved between clusters 
 
-- clusters can b located by using cluster_start and cluster_size
+- clusters can be located by using cluster_start and cluster_size
 
 - calculates the cluster boundaries of each cluster in n-dimensions as to show an accurate physicial discription of each cluster
 
