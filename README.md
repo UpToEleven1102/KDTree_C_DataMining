@@ -14,14 +14,14 @@ GNU bash, version 4.1.11(2)-release (x86_64-unknown-cygwin)
 ```
 gcc main.c lib/utilities.c lib/kdtree.c -o KDTree -std=gnu99
 ```
-run ```KDTree.exe file in Windows```
+run ```KDTree.exe``` file in Windows
 
 Ubuntu Linux 18.04 LTS
 gcc version 7.3.0 (Ubuntu 7.3.0-16ubuntu3)
 ```
 gcc main.c ./lib/utilities.c ./lib/kdTree.c -std+gnu99 -o kdtree
 ```
-run ```./kdtree in ubuntu```
+run ```./kdtree``` in ubuntu
 
 
 ## main.c Documentation
