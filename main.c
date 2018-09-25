@@ -4,6 +4,7 @@
 #include <math.h>
 #include "lib/utilities.h"
 #include "lib/kdTree.h"
+#include "lib/kdTreeSearch.h"
 
 //generate dataSet
 void generateDataPoint(int index, int dim, double *data) {
@@ -21,9 +22,9 @@ void generateData(int dim, int ndata, double *data) {
 int main() {
     srand((unsigned)time(NULL));
     //declare input variables
-    const int N_DATA = 10;
-    const int DIM = 4;
-    const int KK = 4;
+    const int N_DATA = 100;
+    const int DIM = 8;
+    const int KK = 16;
     double *data;
 
     //declare output variables
@@ -45,4 +46,20 @@ int main() {
     //start KDTree
     kdTree(DIM, N_DATA, data, KK, cluster_start, cluster_size, cluster_bdry, cluster_centroid);
     printResult(DIM, data,  KK, cluster_start, cluster_size, cluster_bdry, cluster_centroid);
+
+    //start Search
+    double *query = (double*) malloc(DIM * sizeof(double));
+    double *search_result_ptr = (double*) malloc(DIM*sizeof(double));
+
+    generateDataPoint(0, DIM, query);
+
+    int dataChecked = kdTreeSearch(DIM, KK, query, data, cluster_start, cluster_size, cluster_bdry, search_result_ptr);
+
+    printf("=========Main() result========\n");
+    printf("------Closest Data Point-----\n");
+    for(int i =0; i< DIM; i++){
+        printf("%f\n", search_result_ptr[i]);
+    }
+
+    printf("------Data Points checked-------\n %d", dataChecked);
 }
