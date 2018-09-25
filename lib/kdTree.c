@@ -52,14 +52,12 @@ int findMaxVariance(int dim, double *data, int cluster_start, int cluster_size, 
 
     double max_variance = 0;
     int max_variance_index = 0;
-    printf("------------------variances----------------- \n");
     for(int i = 0; i< dim; i++) {
         variances[i] = variances[i] /cluster_size;
         if (max_variance < variances[i]) {
             max_variance = variances[i];
             max_variance_index = i;
         }
-        printf("%f  \n", variances[i]);
     }
     return max_variance_index;
 }
@@ -145,11 +143,6 @@ int rearrangeData(int dim, int partition_dimension, double *data, int cluster_st
 }
 
 int biPartition(int dim, double *data, int cluster_start, int cluster_size, double* cluster_centroid) {
-    printf("-------------cluster centroid---------------\n");
-    for(int i =0; i<dim; i++) {
-        printf("%f \n", cluster_centroid[i]);
-    }
-
     int partitionDimension = findMaxVariance(dim, data, cluster_start, cluster_size, cluster_centroid);
     int upper_cluster_size = rearrangeData(dim, partitionDimension, data, cluster_start, cluster_size, cluster_centroid);
     return upper_cluster_size;

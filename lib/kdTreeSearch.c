@@ -6,7 +6,7 @@
 
 //utilities:
 void printSearchResults(int dim, int kk, const double *query, double *data, int *cluster_start, int *cluster_size,
-                        double **cluster_bdry, double **cluster_centroid, double *cluster_distance, int data_point_idx,
+                        double **cluster_bdry, double *cluster_distance, int data_point_idx,
                         double *shortest_distance) {
     //TODO: for testing purpose, might be deleted afterwards
     printf("\n\n\n=============Search Result=============\n");
@@ -40,7 +40,7 @@ double distanceToDataPoint(int dim, int idx, const double *query, const double *
 }
 
 int findClosestDataPoint(int dim, int cluster_idx, const double *query, const double *data, int cluster_start,
-                         int cluster_size, double *shortest_distance) {
+                         int cluster_size, double *shortest_distance, int *datapoint_count) {
     //invariant: exhausted search over the cluster set. push distance to the closest point into *shortest distance, return the index with the shortest distance
     int closest_datapoint_idx = 0;
     *shortest_distance = 99999;
@@ -52,18 +52,20 @@ int findClosestDataPoint(int dim, int cluster_idx, const double *query, const do
             *shortest_distance = distance;
             closest_datapoint_idx = idx;
         }
+        *datapoint_count = *datapoint_count +1;
     }
 
     return closest_datapoint_idx;
 }
 
-double distanceToCluster(int dim, const double *query, double *cluster_bdry) {
+double distanceToCluster(int dim, const double *query,const double *cluster_bdry) {
     //invariant: calculate distance of data point to the cluster using formula: 1/dim *(sum di^2) with di = {xi - Mi//x > Mi, 0 //mi<x<Mi, xi - mi //xi < mi}
     double distance = 0;
+    double min , max;
     for (int i = 0; i < dim * 2; i = i + 2) {
         int j = i + 1;
-        double min = cluster_bdry[i];
-        double max = cluster_bdry[j];
+        min = cluster_bdry[i];
+        max = cluster_bdry[j];
         double d;
         if (query[i / 2] < min) {
             d = min - query[i / 2];
@@ -73,9 +75,9 @@ double distanceToCluster(int dim, const double *query, double *cluster_bdry) {
             d = 0;
         }
 
-        distance += square(d);
+        distance += d*d;
     }
-    return distance / dim;
+    return sqrt(distance);
 }
 
 int findClosestCluster(int dim, int kk, const double *query, double **cluster_bdry, double *cluster_distance) {
@@ -87,7 +89,7 @@ int findClosestCluster(int dim, int kk, const double *query, double **cluster_bd
     }
 
     for (int i = 0; i < kk; ++i) {
-        if (cluster_distance[i] < cluster_distance[0]) {
+        if (cluster_distance[i] < cluster_distance[minIndex]) {
             minIndex = i;
         }
     }
@@ -95,23 +97,25 @@ int findClosestCluster(int dim, int kk, const double *query, double **cluster_bd
     return minIndex;
 }
 
-double *kdTreeSearch(int dim, int kk, const double *query, double *data, int *cluster_start, int *cluster_size,
-                     double **cluster_bdry, double **cluster_centroid) {
+int kdTreeSearch(int dim, int kk, const double *query, double *data, int *cluster_start, int *cluster_size,
+                     double **cluster_bdry, double *result_ptr) {
     //invariant: find the cluster that is closest to the query data point, exhausted search the cluster to find the closest data point.
     // Verify the closest data point with neighbor clusters
     double *cluster_distance = (double *) malloc(kk * sizeof(double));
+    int *datapoint_count = (int*)malloc(sizeof(int));
+    *datapoint_count = 0;
     int closest_cluster_idx = findClosestCluster(dim, kk, query, cluster_bdry, cluster_distance);
 
     double *shortest_distance = (double *) malloc(sizeof(double));
     int closest_datapoint_idx = findClosestDataPoint(dim, closest_cluster_idx, query, data,
                                                      cluster_start[closest_cluster_idx],
                                                      cluster_size[closest_cluster_idx],
-                                                     shortest_distance);
+                                                     shortest_distance, datapoint_count);
 
     for (int i = 0; i < kk; i++) {
-        if (cluster_distance[i] < *shortest_distance && i != closest_datapoint_idx) {
+        if (cluster_distance[i] < *shortest_distance && i != closest_cluster_idx) {
             double *temp_distance = (double *) malloc(sizeof(double));
-            int temp_idx = findClosestDataPoint(dim, i, query, data, cluster_start[i], cluster_size[i], temp_distance);
+            int temp_idx = findClosestDataPoint(dim, i, query, data, cluster_start[i], cluster_size[i], temp_distance, datapoint_count);
             if (*temp_distance < *shortest_distance) {
                 *shortest_distance = *temp_distance;
                 closest_datapoint_idx = temp_idx;
@@ -119,6 +123,12 @@ double *kdTreeSearch(int dim, int kk, const double *query, double *data, int *cl
         }
     }
 
-    printSearchResults(dim, kk, query, data, cluster_start, cluster_size, cluster_bdry, cluster_centroid,
+    struct dataPoint e = getElement(dim, closest_datapoint_idx, data);
+    for (int i = 0; i < dim; ++i) {
+        result_ptr[i] = e.data[i];
+    }
+
+    printSearchResults(dim, kk, query, data, cluster_start, cluster_size, cluster_bdry,
                        cluster_distance, closest_datapoint_idx, shortest_distance);
+    return *datapoint_count;
 }
