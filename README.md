@@ -20,7 +20,7 @@ gcc version 7.3.0 (Ubuntu 7.3.0-16ubuntu3)
 ```
 gcc main.c ./lib/utilities.c ./lib/kdTree.c lib/kdTreeSearch.c -std+gnu99 -o kdtree
 ```
-run ````./kdtree``` in ubuntu
+run ```./kdtree``` in ubuntu
 
 
 ## main.c Documentation
