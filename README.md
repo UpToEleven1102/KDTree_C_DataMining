@@ -1,23 +1,26 @@
 # KDTree_C_DataMining ReadMe File
  CS 4331 Data Mining & High Performance Computing
  9/23/2018
+ Samuel Eash
  Huyen Vu
  Kurtis Jackson
- Samuel Eash
-
 
 
 ## File compilation
 
 Windows
 GNU bash, version 4.1.11(2)-release (x86_64-unknown-cygwin)
-gcc main.c lib/utilities.c lib/kdtree.c -o KDTree -std=gnu99
-run KDTree.exe file in Windows
+```
+gcc main.c lib/utilities.c lib/kdTree.c lib/kdTreeSearch.c -o KDTree -std=gnu99
+```
+run ```KDTree.exe``` file in Windows
 
 Ubuntu Linux 18.04 LTS
 gcc version 7.3.0 (Ubuntu 7.3.0-16ubuntu3)
-gcc main.c ./lib/utilities.c ./lib/kdTree.c -std+gnu99 -o kdtree
-run ./kdtree in ubuntu
+```
+gcc main.c ./lib/utilities.c ./lib/kdTree.c lib/kdTreeSearch.c -std+gnu99 -o kdtree
+```
+run ````./kdtree``` in ubuntu
 
 
 ## main.c Documentation
@@ -43,7 +46,14 @@ kdTree.c receives data from main.c for building the KD-Tree
 
 - uses the biPartition function to split each cluster into 2 subclusters until the number of clusters has reached k^2 clusters.
 
+## kdTreeSearch.c Documentation
 
+- kdTreeSearch take in inputs of a KdTree (dimension, number of cluster, data, clusters' information ....) and a query data point
+- outputs are an integer indicating number of data points that are checked being return out of the function and a pointer of doubles that points to the closest data point
+- kdTreeSearch function calculates distances from the query data point to each cluster
+- kdTreeSearch function exhausted searches the closest cluster to find the data point in the cluster that closest to the query point
+- function checks the distance from query to all clusters  to verify no cluster is closer than the data point found
+- If there is cluster that closer to data point than the data point found than the kdTreeSearch function do exhausted search within the cluster again until there is no cluster that is closer to the query than the data point found
 
 ## utilities.c Documentation
 
