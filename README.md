@@ -39,11 +39,8 @@ kdTree.c receives data from main.c for building the KD-Tree
 - builds the entries of the KD-Tree based on bi-partition function
 - calculates the max variance and centroid of each cluster that is passed through it max variance is computed using: var x = 1/n (sum (xi- |x|)^2) 
 - cluster centroid is computed using: mean x = 1/n sum(x1+x2+...)
-
 - clusters can b located by using cluster_start and cluster_size
-
 - calculates the cluster boundaries of each cluster in n-dimensions as to show an accurate physicial discription of each cluster
-
 - uses the biPartition function to split each cluster into 2 subclusters until the number of clusters has reached k^2 clusters.
 
 ## kdTreeSearch.c Documentation
