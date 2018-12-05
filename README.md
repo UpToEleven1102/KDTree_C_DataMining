@@ -1,10 +1,6 @@
 # KDTree_C_DataMining ReadMe File
- CS 4331 Data Mining & High Performance Computing
+Data Mining & High Performance Computing
  9/23/2018
- - Samuel Eash
- - Huyen Vu
- - Kurtis Jackson
-
 
 ## File compilation
 
